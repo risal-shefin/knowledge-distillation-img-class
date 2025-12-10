@@ -1,7 +1,7 @@
 """
 Evaluate a pretrained ImageNet model on ImageNet validation dataset.
 
-This script loads a pretrained image classification model (ResNet50) with ImageNet weights
+This script loads a pretrained image classification model with ImageNet weights
 and evaluates its accuracy on the ImageNet validation dataset.
 """
 
@@ -24,9 +24,10 @@ from utils import (
 
 
 def load_pretrained_model():
-    """Load pretrained ResNet50 model with ImageNet weights."""
-    print("Loading pretrained ResNet50 model with ImageNet weights...")
-    model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+    """Load pretrained model with ImageNet weights."""
+    print("Loading pretrained model with ImageNet weights...")
+    model = models.resnet152(weights=models.ResNet152_Weights.IMAGENET1K_V2)
+    # model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
     model.eval()  # Set to evaluation mode
     
     # Move to GPU if available

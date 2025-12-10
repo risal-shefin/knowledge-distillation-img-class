@@ -1,0 +1,35 @@
+======================================================================
+Pretrained ImageNet Model Evaluation
+======================================================================
+Loading pretrained model with ImageNet weights...
+Model loaded successfully on cuda!
+
+Loading Mini-ImageNet test dataset from Hugging Face...
+Test set: 5000 images
+Dataset loaded in memory (not saved to disk)
+Aligned 100 dataset classes to ImageNet-1K indices
+
+Evaluating model on full test set (5000 images)...
+Processed 3200/5000 images...
+
+Inference completed in 23.55 seconds
+Average time per image: 4.71 ms
+
+Results:
+Top-1 Accuracy: 74.44%
+Top-5 Accuracy: 91.44%
+
+Sample predictions (first 5 images):
+  Image 1: True: house finch | Predicted: house finch ✓
+  Image 2: True: house finch | Predicted: house finch ✓
+  Image 3: True: house finch | Predicted: house finch ✓
+  Image 4: True: house finch | Predicted: house finch ✓
+  Image 5: True: house finch | Predicted: house finch ✓
+
+======================================================================
+Evaluation Complete!
+======================================================================
+
+Final Results:
+  Top-1 Accuracy: 74.44%
+  Top-5 Accuracy: 91.44%
