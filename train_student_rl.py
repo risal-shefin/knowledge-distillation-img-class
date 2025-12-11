@@ -530,7 +530,7 @@ def test_student(student_model, test_loader, device, checkpoint_path):
     
     # Load best checkpoint
     print(f"\nLoading checkpoint: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     student_model.load_state_dict(checkpoint['model_state_dict'])
     print(f"Loaded model from epoch {checkpoint['epoch']} (Val Acc: {checkpoint['val_accuracy']:.2f}%)")
     

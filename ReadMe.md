@@ -69,3 +69,15 @@ Else:
 
 - Total reward
     - `R_t = R_acc + R_loss + R_early + R_abs`
+
+## Results
+| Model | Mini-ImageNet Test Set Accuracy |
+|---|---:|
+| Teacher (ResNet152 trained on ImageNet) | 83.26% |
+| Student (MobileNetV2 trained on ImageNet) | 74.44% |
+| Student (Knowledge Distillation on Mini-ImageNet) | 87.20% |
+| Student (Knowledge Distillation + Curriculum Learning) | 85.06% |
+
+### Short analysis
+
+The student benefits significantly from both Knowledge Distillation and Curriculum Learning, outperforming the teacher and the baseline student trained on ImageNet. Notably, in curriculum learning, each training epoch consists of only 60% of the full dataset around the designated difficulty score selected by the RL agent. Considering that reduced per-epoch coverage, 85.06% is a good performance. That said, there is still lots of improvement possible in the curriculum learning part, since it still trails the knowledge distillation result and likely has room for better sampling, difficulty scheduling, and agent stability.
