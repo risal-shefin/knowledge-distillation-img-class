@@ -73,11 +73,12 @@ Else:
 ## Results
 | Model | Mini-ImageNet Test Set Accuracy |
 |---|---:|
-| Teacher (ResNet152 trained on ImageNet) | 83.26% |
-| Student (MobileNetV2 trained on ImageNet) | 74.44% |
-| Student (Knowledge Distillation on Mini-ImageNet) | 87.20% |
-| Student (Knowledge Distillation + Curriculum Learning) | 85.06% |
+| Teacher (ResNet152 trained on ImageNet) | 95.04% |
+| Student (MobileNetV2 trained on Mini-ImageNet labels) | 79.28% |
+| Student (Knowledge Distillation, 60% weight on labels, 40% weight on teacher) | 86.40% |
+| Student (Knowledge Distillation from teacher only) | 87.20% |
+| Student (Knowledge Distillation + Curriculum Learning, teacher only) | 85.06% |
 
 ### Short analysis
 
-The student benefits significantly from both Knowledge Distillation and Curriculum Learning, outperforming the teacher and the baseline student trained on ImageNet. Notably, in curriculum learning, each training epoch consisted of only 60% of the full dataset around the designated difficulty score selected by the RL agent. Considering the reduced per-epoch coverage, 85.06% is a good performance. That said, there is still lots of improvement possible in the curriculum learning part, since it still trails the knowledge distillation result and likely has room for better sampling, difficulty scheduling, and agent stability.
+The results show that Knowledge Distillation substantially improves student performance over the label-only baseline. Adding Curriculum Learning reduces test accuracy but remains well above the baseline. Here, a notable factor is that in curriculum learning, each training epoch consisted of only 60% of the full dataset around the designated difficulty score selected by the RL agent. Considering the reduced per-epoch coverage, 85.06% is a good performance. That said, there is still lots of improvement possible in the curriculum learning part, since it still trails the knowledge distillation result and likely has room for better sampling, difficulty scheduling, and agent stability.

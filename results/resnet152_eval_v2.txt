@@ -32,5 +32,5 @@ Evaluation Complete!
 ======================================================================
 
 Final Results:
-  Top-1 Accuracy: 83.26%
-  Top-5 Accuracy: 96.10%
+  Top-1 Accuracy: 95.04%
+  Top-5 Accuracy: 99.60%

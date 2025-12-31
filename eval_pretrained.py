@@ -114,6 +114,13 @@ def evaluate_model(model, test_dataset, device, imagenet_labels, batch_size=32):
     num_samples = len(test_dataset)
     print(f"\nEvaluating model on full test set ({num_samples} images)...")
     
+    # Get the valid Mini-ImageNet class indices from the label mapping
+    valid_imagenet_indices = sorted(set(test_dataset.label_mapping.values()))
+    print(f"Mini-ImageNet contains {len(valid_imagenet_indices)} classes out of 1000 ImageNet classes")
+    
+    # Create a mask tensor for filtering outputs
+    valid_indices_tensor = torch.tensor(valid_imagenet_indices, device=device)
+    
     test_loader = DataLoader(
         test_dataset, 
         batch_size=batch_size, 
@@ -137,13 +144,21 @@ def evaluate_model(model, test_dataset, device, imagenet_labels, batch_size=32):
             # Forward pass
             outputs = model(images)
             
-            # Get top-1 predictions
-            _, predicted = torch.max(outputs, 1)
+            # Mask outputs to only consider valid Mini-ImageNet classes
+            # Extract logits only for valid classes
+            masked_outputs = outputs[:, valid_indices_tensor]
+            
+            # Get top-1 predictions from masked outputs
+            _, masked_predicted_idx = torch.max(masked_outputs, 1)
+            # Map back to original ImageNet indices
+            predicted = valid_indices_tensor[masked_predicted_idx]
             all_predictions.extend(predicted.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
             
-            # Get top-5 predictions
-            _, top5_pred = outputs.topk(5, 1, True, True)
+            # Get top-5 predictions from masked outputs
+            _, top5_masked_idx = masked_outputs.topk(5, 1, True, True)
+            # Map back to original ImageNet indices
+            top5_pred = valid_indices_tensor[top5_masked_idx]
             top5_pred = top5_pred.t()
             correct = top5_pred.eq(labels.view(1, -1).expand_as(top5_pred))
             top5_correct += correct[:5].reshape(-1).float().sum(0).item()

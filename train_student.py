@@ -185,10 +185,11 @@ def train_student(
     num_epochs=50,
     learning_rate=0.001,
     temperature=4.0,
+    alpha=0.3,
     save_dir='models'
 ):
     """
-    Train student model using knowledge distillation.
+    Train student model using knowledge distillation with both hard and soft targets.
     
     Args:
         student_model: Student model to train
@@ -200,6 +201,7 @@ def train_student(
         num_epochs: Number of training epochs
         learning_rate: Initial learning rate
         temperature: Temperature for distillation
+        alpha: Weight for hard label loss (1-alpha for soft target loss)
         save_dir: Directory to save checkpoints
     
     Returns:
@@ -226,8 +228,9 @@ def train_student(
     optimizer = optim.Adam(student_model.parameters(), lr=learning_rate, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-6)
     
-    # Setup loss function
-    criterion = DistillationLoss(temperature=temperature)
+    # Setup loss functions
+    hard_loss_fn = nn.CrossEntropyLoss()  # Hard label loss
+    soft_loss_fn = DistillationLoss(temperature=temperature)  # Soft target loss
     
     # Training state
     best_val_acc = 0.0
@@ -238,9 +241,10 @@ def train_student(
     print(f"  Batch size: {train_loader.batch_size}")
     print(f"  Learning rate: {learning_rate}")
     print(f"  Temperature: {temperature}")
+    print(f"  Alpha (hard loss weight): {alpha}")
     print(f"  Optimizer: Adam")
     print(f"  Scheduler: CosineAnnealingLR")
-    print(f"  Loss: Pure KD (soft targets only)")
+    print(f"  Loss: Combined (hard labels + soft targets)")
     
     # Training loop
     for epoch in range(num_epochs):
@@ -249,6 +253,8 @@ def train_student(
         # Training phase
         student_model.train()
         train_loss = 0.0
+        train_hard_loss = 0.0
+        train_soft_loss = 0.0
         num_batches = 0
         
         for batch_idx, (images, labels) in enumerate(train_loader):
@@ -262,8 +268,14 @@ def train_student(
             # Forward pass through student
             student_logits = student_model(images)
             
-            # Compute distillation loss
-            loss = criterion(student_logits, teacher_soft_targets)
+            # Compute hard label loss (cross-entropy with ground truth)
+            hard_loss = hard_loss_fn(student_logits, labels)
+            
+            # Compute soft target loss (KL divergence with teacher)
+            soft_loss = soft_loss_fn(student_logits, teacher_soft_targets)
+            
+            # Combined loss with weighting
+            loss = alpha * hard_loss + (1 - alpha) * soft_loss
             
             # Backward pass and optimization
             optimizer.zero_grad()
@@ -271,11 +283,15 @@ def train_student(
             optimizer.step()
             
             train_loss += loss.item()
+            train_hard_loss += hard_loss.item()
+            train_soft_loss += soft_loss.item()
             num_batches += 1
             
         avg_train_loss = train_loss / num_batches
+        avg_hard_loss = train_hard_loss / num_batches
+        avg_soft_loss = train_soft_loss / num_batches
         # Print progress
-        print(f"  Epoch [{epoch+1}/{num_epochs}]", f"Loss: {avg_train_loss:.4f}")
+        print(f"  Epoch [{epoch+1}/{num_epochs}]", f"Loss: {avg_train_loss:.4f} (Hard: {avg_hard_loss:.4f}, Soft: {avg_soft_loss:.4f})")
         
         # Validation phase
         val_acc = validate(student_model, val_loader, device)
@@ -289,12 +305,14 @@ def train_student(
         
         # Log to TensorBoard
         writer.add_scalar('Loss/train', avg_train_loss, epoch)
+        writer.add_scalar('Loss/hard', avg_hard_loss, epoch)
+        writer.add_scalar('Loss/soft', avg_soft_loss, epoch)
         writer.add_scalar('Accuracy/validation', val_acc, epoch)
         writer.add_scalar('Learning_Rate', current_lr, epoch)
         
         # Print epoch summary
         print(f"\nEpoch [{epoch+1}/{num_epochs}] Summary:")
-        print(f"  Train Loss: {avg_train_loss:.4f}")
+        print(f"  Train Loss: {avg_train_loss:.4f} (Hard: {avg_hard_loss:.4f}, Soft: {avg_soft_loss:.4f})")
         print(f"  Val Accuracy: {val_acc:.2f}%")
         print(f"  Learning Rate: {current_lr:.6f}")
         print(f"  Time: {epoch_time:.2f}s")
@@ -395,6 +413,7 @@ def main():
     NUM_EPOCHS = 1000
     LEARNING_RATE = 0.001
     TEMPERATURE = 4.0
+    ALPHA = 0.6  # Weight for hard label loss (0.6 hard, 0.4 soft)
     NUM_WORKERS = 4
     SAVE_DIR = 'models'
     
@@ -436,6 +455,7 @@ def main():
         num_epochs=NUM_EPOCHS,
         learning_rate=LEARNING_RATE,
         temperature=TEMPERATURE,
+        alpha=ALPHA,
         save_dir=SAVE_DIR
     )
     
